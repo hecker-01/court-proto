@@ -11,10 +11,14 @@ const USERS = [
     role: "admin",
     createdAt: "2024-01-15",
     eloHistory: [
-      { label: "Jan", elo: 1500 }, { label: "Feb", elo: 1560 },
-      { label: "Mar", elo: 1640 }, { label: "Apr", elo: 1600 },
-      { label: "May", elo: 1700 }, { label: "Jun", elo: 1760 },
-      { label: "Jul", elo: 1820 }, { label: "Aug", elo: 1850 },
+      { label: "Jan", elo: 1500 },
+      { label: "Feb", elo: 1560 },
+      { label: "Mar", elo: 1640 },
+      { label: "Apr", elo: 1600 },
+      { label: "May", elo: 1700 },
+      { label: "Jun", elo: 1760 },
+      { label: "Jul", elo: 1820 },
+      { label: "Aug", elo: 1850 },
     ],
   },
   {
@@ -27,10 +31,14 @@ const USERS = [
     role: "user",
     createdAt: "2024-02-20",
     eloHistory: [
-      { label: "Jan", elo: 1500 }, { label: "Feb", elo: 1530 },
-      { label: "Mar", elo: 1510 }, { label: "Apr", elo: 1580 },
-      { label: "May", elo: 1620 }, { label: "Jun", elo: 1650 },
-      { label: "Jul", elo: 1700 }, { label: "Aug", elo: 1720 },
+      { label: "Jan", elo: 1500 },
+      { label: "Feb", elo: 1530 },
+      { label: "Mar", elo: 1510 },
+      { label: "Apr", elo: 1580 },
+      { label: "May", elo: 1620 },
+      { label: "Jun", elo: 1650 },
+      { label: "Jul", elo: 1700 },
+      { label: "Aug", elo: 1720 },
     ],
   },
   {
@@ -43,9 +51,12 @@ const USERS = [
     role: "user",
     createdAt: "2024-03-05",
     eloHistory: [
-      { label: "Jan", elo: 1500 }, { label: "Feb", elo: 1480 },
-      { label: "Mar", elo: 1540 }, { label: "Apr", elo: 1600 },
-      { label: "May", elo: 1620 }, { label: "Jun", elo: 1680 },
+      { label: "Jan", elo: 1500 },
+      { label: "Feb", elo: 1480 },
+      { label: "Mar", elo: 1540 },
+      { label: "Apr", elo: 1600 },
+      { label: "May", elo: 1620 },
+      { label: "Jun", elo: 1680 },
     ],
   },
   {
@@ -58,8 +69,10 @@ const USERS = [
     role: "user",
     createdAt: "2024-03-15",
     eloHistory: [
-      { label: "Mar", elo: 1500 }, { label: "Apr", elo: 1520 },
-      { label: "May", elo: 1560 }, { label: "Jun", elo: 1600 },
+      { label: "Mar", elo: 1500 },
+      { label: "Apr", elo: 1520 },
+      { label: "May", elo: 1560 },
+      { label: "Jun", elo: 1600 },
       { label: "Jul", elo: 1645 },
     ],
   },
@@ -73,8 +86,10 @@ const USERS = [
     role: "user",
     createdAt: "2024-04-10",
     eloHistory: [
-      { label: "Apr", elo: 1500 }, { label: "May", elo: 1530 },
-      { label: "Jun", elo: 1570 }, { label: "Jul", elo: 1610 },
+      { label: "Apr", elo: 1500 },
+      { label: "May", elo: 1530 },
+      { label: "Jun", elo: 1570 },
+      { label: "Jul", elo: 1610 },
     ],
   },
   {
@@ -87,8 +102,10 @@ const USERS = [
     role: "user",
     createdAt: "2024-04-20",
     eloHistory: [
-      { label: "Apr", elo: 1500 }, { label: "May", elo: 1490 },
-      { label: "Jun", elo: 1540 }, { label: "Jul", elo: 1590 },
+      { label: "Apr", elo: 1500 },
+      { label: "May", elo: 1490 },
+      { label: "Jun", elo: 1540 },
+      { label: "Jul", elo: 1590 },
     ],
   },
   {
@@ -101,7 +118,8 @@ const USERS = [
     role: "user",
     createdAt: "2024-05-01",
     eloHistory: [
-      { label: "May", elo: 1500 }, { label: "Jun", elo: 1520 },
+      { label: "May", elo: 1500 },
+      { label: "Jun", elo: 1520 },
       { label: "Jul", elo: 1565 },
     ],
   },
@@ -115,7 +133,8 @@ const USERS = [
     role: "user",
     createdAt: "2024-05-15",
     eloHistory: [
-      { label: "May", elo: 1500 }, { label: "Jun", elo: 1510 },
+      { label: "May", elo: 1500 },
+      { label: "Jun", elo: 1510 },
       { label: "Jul", elo: 1540 },
     ],
   },
@@ -125,7 +144,8 @@ const GAMES = [
   {
     id: 1,
     name: "Monday Night Showdown",
-    description: "Weekly competitive rotational game. Players challenge the reigning King to earn their throne. All skill levels welcome!",
+    description:
+      "Weekly competitive rotational game. Players challenge the reigning King to earn their throne. All skill levels welcome!",
     status: "planned",
     plannedAt: "2026-05-12T19:00",
     location: "Court A",
@@ -139,7 +159,8 @@ const GAMES = [
   {
     id: 2,
     name: "Weekend Warriors Cup",
-    description: "Casual weekend tournament with rotating partners. Great for building skills and meeting new players.",
+    description:
+      "Casual weekend tournament with rotating partners. Great for building skills and meeting new players.",
     status: "planned",
     plannedAt: "2026-05-14T10:00",
     location: "Court B",
@@ -166,7 +187,8 @@ const GAMES = [
   {
     id: 4,
     name: "Spring League Finals",
-    description: "Season finale. Top players from the spring league compete for the championship.",
+    description:
+      "Season finale. Top players from the spring league compete for the championship.",
     status: "started",
     plannedAt: "2026-05-07T15:00",
     location: "Main Court",
