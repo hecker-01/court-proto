@@ -1,116 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game · King of the Court</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="page">
-  <div style="padding-top:24px">
-    <button class="back-btn" onclick="history.back()">← Back</button>
-  </div>
+<div class="container py-4">
+  <a href="index.html" class="text-secondary small d-inline-block mb-3">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
   <div id="content"></div>
 </div>
 
-<nav class="bottom-nav" id="bottom-nav"></nav>
+<nav class="navbar fixed-bottom bg-body-tertiary border-top" id="bottom-nav"></nav>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
   initNav('home');
   const user = getUser();
-  const id = parseInt(qp('id'));
+  const id   = parseInt(qp('id'));
 
   function render() {
     const game = getGame(id);
     if (!game) {
-      show('content', `<div class="empty"><div class="empty-icon">🚫</div><div class="empty-title">Game not found</div><p class="empty-text">This game may have been removed.</p><a href="index.html" class="btn btn-ghost mt-4">Back to Home</a></div>`);
+      show('content', `
+        <div class="text-center text-secondary py-5">
+          <i class="bi bi-exclamation-circle" style="font-size:2rem"></i>
+          <p class="mt-2">Game not found.</p>
+          <a href="index.html" class="btn btn-outline-secondary btn-sm">Back to Home</a>
+        </div>`);
       return;
     }
 
     document.title = `${game.name} · King of the Court`;
 
-    const inGame  = user && isInGame(game, user.id);
-    const spots   = game.maxParticipants - game.participants.length;
-    const canJoin = user && game.status === 'planned' && spots > 0 && !inGame;
+    const inGame   = user && isInGame(game, user.id);
+    const spots    = game.maxParticipants - game.participants.length;
+    const canJoin  = user && game.status === 'planned' && spots > 0 && !inGame;
     const canLeave = user && game.status === 'planned' && inGame;
-    const avgElo  = game.participants.length
+    const avgElo   = game.participants.length
       ? Math.round(game.participants.reduce((s, p) => s + p.elo, 0) / game.participants.length)
       : null;
 
-    const winnerBanner = (game.status === 'ended' || game.status === 'processed') && game.winnerName
-      ? `<div class="winner-banner">
-           <span style="font-size:20px">👑</span>
-           <div><div class="text-xs text-muted mb-1">Winner</div><div style="font-weight:600">${game.winnerName}</div></div>
-         </div>` : '';
-
-    const signupBtn = user
-      ? (canJoin
-          ? `<button class="btn btn-primary" onclick="handleJoin()">Sign Up</button>`
-          : canLeave
-            ? `<button class="btn btn-ghost" style="color:var(--danger)" onclick="handleLeave()">Leave Game</button>`
-            : inGame
-              ? `<span class="text-sm text-racket">✓ You're signed up</span>`
-              : '')
-      : game.status === 'planned'
-        ? `<a href="login.html?next=${encodeURIComponent(location.href)}" class="btn btn-primary">Sign in to join</a>`
-        : '';
+    const actionBtn = canJoin
+      ? `<button class="btn btn-primary btn-sm" onclick="handleJoin()">Sign Up</button>`
+      : canLeave
+        ? `<button class="btn btn-outline-danger btn-sm" onclick="handleLeave()">Leave Game</button>`
+        : inGame
+          ? `<span class="small text-primary"><i class="bi bi-check"></i> Signed up</span>`
+          : !user && game.status === 'planned'
+            ? `<a href="login.html?next=${encodeURIComponent(location.href)}" class="btn btn-primary btn-sm">Sign in to join</a>`
+            : '';
 
     const sorted = [...game.participants].sort((a, b) => b.elo - a.elo);
-    const participantRows = sorted.length
-      ? sorted.map(p => {
-          const isWinner = p.userId === game.winnerUserId;
-          const isMe = user && p.userId === user.id;
-          return `<div class="list-row clickable" onclick="location.href='profile.html?id=${p.userId}'">
-            <div class="avatar">${initials(p.name)}</div>
-            <div class="flex-1 min-w-0">
-              <div style="font-weight:500">${p.name}${isMe ? ' <span class="text-muted text-xs">(you)</span>' : ''}${isWinner ? ' 👑' : ''}</div>
-            </div>
-            <div class="text-sm text-dim" style="font-weight:600">${p.elo} ELO</div>
-          </div>`;
-        }).join('')
-      : `<div class="text-sm text-muted" style="padding:16px">No players signed up yet.</div>`;
 
     show('content', `
-      <div class="card" style="margin-bottom:16px">
-        <div class="flex justify-between items-start mb-3">
-          <h1 style="font-size:24px;font-weight:700;line-height:1.2">${game.name}</h1>
-          ${statusBadge(game.status)}
-        </div>
-        ${game.description ? `<p class="text-dim text-sm mb-4" style="line-height:1.6">${game.description}</p>` : ''}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h2 class="h4 mb-0">${game.name}</h2>
+            ${statusBadge(game.status)}
+          </div>
+          ${game.description ? `<p class="text-secondary small mb-3">${game.description}</p>` : ''}
 
-        <div class="info-grid">
-          <div class="info-box"><div class="info-box-label">Date</div><div class="info-box-value" style="font-size:13px">${formatDate(game.plannedAt)}</div></div>
-          <div class="info-box"><div class="info-box-label">Time</div><div class="info-box-value">${formatTime(game.plannedAt)}</div></div>
-          <div class="info-box"><div class="info-box-label">Location</div><div class="info-box-value" style="font-size:13px">${game.location}</div></div>
-          <div class="info-box"><div class="info-box-label">Players</div><div class="info-box-value">${game.participants.length} / ${game.maxParticipants}</div></div>
-        </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="p-2 bg-body-tertiary rounded">
+                <div class="text-secondary" style="font-size:11px">Date</div>
+                <div class="small fw-semibold">${formatDate(game.plannedAt)}</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2 bg-body-tertiary rounded">
+                <div class="text-secondary" style="font-size:11px">Time</div>
+                <div class="small fw-semibold">${formatTime(game.plannedAt)}</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2 bg-body-tertiary rounded">
+                <div class="text-secondary" style="font-size:11px">Location</div>
+                <div class="small fw-semibold">${game.location}</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2 bg-body-tertiary rounded">
+                <div class="text-secondary" style="font-size:11px">Players</div>
+                <div class="small fw-semibold">${game.participants.length} / ${game.maxParticipants}</div>
+              </div>
+            </div>
+          </div>
 
-        ${avgElo !== null ? `<div class="text-sm text-muted mt-2">Avg ELO: <span style="color:var(--snow)">${avgElo}</span></div>` : ''}
-        ${winnerBanner ? `<div class="mt-4">${winnerBanner}</div>` : ''}
-        ${signupBtn ? `<div class="mt-4">${signupBtn}</div>` : ''}
+          ${avgElo ? `<p class="small text-secondary mb-2">Avg. ELO: ${avgElo}</p>` : ''}
+
+          ${game.winnerName ? `
+            <div class="alert alert-warning py-2 small mb-3">
+              Winner: <strong>${game.winnerName}</strong>
+            </div>` : ''}
+
+          ${actionBtn ? `<div>${actionBtn}</div>` : ''}
+        </div>
       </div>
 
-      <div class="card" style="padding-bottom:0">
-        <h2 style="font-size:16px;font-weight:600;margin-bottom:4px">
-          Participants <span class="text-muted">(${game.participants.length})</span>
-        </h2>
-        <div style="margin:0 -24px">${participantRows}</div>
-      </div>
-    `);
+      <div class="card">
+        <div class="card-header small fw-semibold">
+          Participants (${game.participants.length})
+        </div>
+        <div class="list-group list-group-flush">
+          ${sorted.length
+            ? sorted.map(p => {
+                const isMe    = user && p.userId === user.id;
+                const isWinner = p.userId === game.winnerUserId;
+                return `
+                  <a href="profile.html?id=${p.userId}" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-2">
+                    <div class="avatar">${initials(p.name)}</div>
+                    <div class="flex-grow-1">
+                      ${p.name}
+                      ${isMe     ? '<span class="text-secondary small ms-1">(you)</span>' : ''}
+                      ${isWinner ? '<span class="badge bg-warning text-dark ms-1 small">Winner</span>' : ''}
+                    </div>
+                    <span class="small text-secondary">${p.elo} ELO</span>
+                  </a>`;
+              }).join('')
+            : `<div class="list-group-item text-secondary small">No players signed up yet.</div>`}
+        </div>
+      </div>`);
   }
 
-  function handleJoin() {
-    joinGame(id, user);
-    render();
-  }
-
-  function handleLeave() {
-    leaveGame(id, user.id);
-    render();
-  }
+  function handleJoin()  { joinGame(id, user); render(); }
+  function handleLeave() { leaveGame(id, user.id); render(); }
 
   render();
 </script>

@@ -1,25 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>King of the Court</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="page">
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">King of the Court</h1>
-      <p class="page-sub" id="sub-text">Upcoming games</p>
-    </div>
+<div class="container py-4">
+  <div class="mb-4">
+    <h1 class="h3 fw-bold">King of the Court</h1>
+    <p class="text-secondary mb-0" id="sub-text">Upcoming games</p>
   </div>
   <div id="live-section"></div>
   <div id="games-list"></div>
 </div>
 
-<nav class="bottom-nav" id="bottom-nav"></nav>
+<nav class="navbar fixed-bottom bg-body-tertiary border-top" id="bottom-nav"></nav>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -28,50 +29,52 @@
   if (user) document.getElementById('sub-text').textContent = `Welcome back, ${user.name.split(' ')[0]}`;
 
   function gameCard(game) {
-    const spots = game.maxParticipants - game.participants.length;
+    const spots  = game.maxParticipants - game.participants.length;
     const inGame = user && isInGame(game, user.id);
     const canJoin = user && game.status === 'planned' && spots > 0 && !inGame;
-    const avgElo = game.participants.length
+    const avgElo  = game.participants.length
       ? Math.round(game.participants.reduce((s, p) => s + p.elo, 0) / game.participants.length)
       : null;
 
     return `
-      <div class="card clickable" onclick="location.href='game.html?id=${game.id}'">
-        <div class="flex justify-between items-start mb-2">
-          <h3 style="font-size:16px;font-weight:600">${game.name}</h3>
-          ${statusBadge(game.status)}
+      <div class="card mb-3">
+        <div class="card-body clickable" onclick="location.href='game.html?id=${game.id}'">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <h5 class="card-title mb-0">${game.name}</h5>
+            ${statusBadge(game.status)}
+          </div>
+          <p class="text-secondary small mb-2">${game.description}</p>
+          <div class="d-flex gap-3 small text-secondary">
+            <span>${formatDate(game.plannedAt)}</span>
+            <span>${game.participants.length}/${game.maxParticipants} players</span>
+            ${avgElo !== null ? `<span>~${avgElo} ELO</span>` : ''}
+          </div>
+          ${inGame ? `<div class="small text-primary mt-2"><i class="bi bi-check"></i> Signed up</div>` : ''}
         </div>
-        <p class="text-sm text-dim mb-3" style="line-height:1.5">${game.description}</p>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px;color:var(--snow-dim);border-top:1px solid var(--asphalt-light);padding-top:14px">
-          <span>📅 ${formatDate(game.plannedAt)}</span>
-          <span style="text-align:center">${game.participants.length} ${game.participants.length === 1 ? 'player' : 'players'}</span>
-          <span style="text-align:right">${avgElo !== null ? '~' + avgElo + ' ELO' : '—'}</span>
-        </div>
-        ${inGame ? `<div class="text-sm text-racket mt-3">✓ You're signed up</div>` : ''}
-        ${canJoin ? `<div class="mt-3" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="handleJoin(${game.id})">Sign Up</button></div>` : ''}
+        ${canJoin ? `
+          <div class="card-footer" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-primary" onclick="handleJoin(${game.id})">Sign Up</button>
+            <a href="game.html?id=${game.id}" class="btn btn-sm btn-outline-secondary ms-1">Details</a>
+          </div>` : ''}
       </div>`;
   }
 
   function render() {
-    const games = getGames();
-    const live = games.filter(g => g.status === 'started');
+    const games    = getGames();
+    const live     = games.filter(g => g.status === 'started');
     const upcoming = games.filter(g => g.status === 'planned')
       .sort((a, b) => new Date(a.plannedAt) - new Date(b.plannedAt));
 
-    if (live.length) {
-      show('live-section', `
-        <p class="text-sm font-bold mb-2" style="color:var(--status-pending)">🔴 Live now</p>
-        ${live.map(gameCard).join('')}
-        <p class="text-sm text-muted mb-3 mt-2">Upcoming</p>`);
-    } else {
-      show('live-section', '');
-    }
+    show('live-section', live.length
+      ? `<p class="small fw-semibold text-danger mb-2">Live</p>${live.map(gameCard).join('')}<hr>`
+      : '');
 
-    if (!upcoming.length && !live.length) {
-      show('games-list', `<div class="empty"><div class="empty-icon">🏆</div><div class="empty-title">No upcoming games</div><p class="empty-text">Check back soon!</p></div>`);
-    } else {
-      show('games-list', upcoming.map(gameCard).join(''));
-    }
+    show('games-list', upcoming.length
+      ? upcoming.map(gameCard).join('')
+      : `<div class="text-center text-secondary py-5">
+           <i class="bi bi-calendar-x" style="font-size:2rem"></i>
+           <p class="mt-2 mb-0">No upcoming games</p>
+         </div>`);
   }
 
   function handleJoin(gameId) {

@@ -1,65 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login · King of the Court</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="page" style="max-width:420px;padding-top:48px">
-  <div class="text-center mb-6">
-    <div style="font-size:32px;font-weight:700;color:var(--snow)">King of the Court</div>
-  </div>
+<div class="container py-5" style="max-width:420px">
+  <h1 class="h4 fw-bold text-center mb-4">King of the Court</h1>
 
-  <div class="tabs">
-    <button class="tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
-    <button class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
-  </div>
+  <ul class="nav nav-tabs mb-3" id="authTabs">
+    <li class="nav-item">
+      <button class="nav-link active" onclick="switchTab('login')">Log In</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" onclick="switchTab('signup')">Sign Up</button>
+    </li>
+  </ul>
 
-  <!-- Login -->
   <form id="login-form">
     <div id="login-error"></div>
-    <div class="form-group">
+    <div class="mb-3">
       <label class="form-label">Email</label>
-      <input type="email" class="form-input" id="login-email" placeholder="you@example.com" autocomplete="email">
+      <input type="email" class="form-control" id="login-email" placeholder="you@example.com" autocomplete="email">
     </div>
-    <div class="form-group">
+    <div class="mb-3">
       <label class="form-label">Password</label>
-      <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" class="form-control" id="login-password" placeholder="Password" autocomplete="current-password">
     </div>
-    <button type="submit" class="btn btn-primary btn-full">Log In</button>
+    <button type="submit" class="btn btn-primary w-100">Log In</button>
   </form>
 
-  <!-- Signup -->
   <form id="signup-form" style="display:none">
     <div id="signup-error"></div>
-    <div class="form-group">
+    <div class="mb-3">
       <label class="form-label">Name</label>
-      <input type="text" class="form-input" id="su-name" placeholder="Your full name">
+      <input type="text" class="form-control" id="su-name" placeholder="Full name">
     </div>
-    <div class="form-group">
+    <div class="mb-3">
       <label class="form-label">Email</label>
-      <input type="email" class="form-input" id="su-email" placeholder="you@example.com">
+      <input type="email" class="form-control" id="su-email" placeholder="you@example.com">
     </div>
-    <div class="form-group">
+    <div class="mb-3">
       <label class="form-label">Password</label>
-      <input type="password" class="form-input" id="su-password" placeholder="Create a password">
+      <input type="password" class="form-control" id="su-password" placeholder="Password">
     </div>
-    <div class="form-group">
-      <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
-      <input type="tel" class="form-input" id="su-phone" placeholder="555-0100">
+    <div class="mb-3">
+      <label class="form-label">Phone <span class="text-secondary">(optional)</span></label>
+      <input type="tel" class="form-control" id="su-phone" placeholder="555-0100">
     </div>
-    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    <button type="submit" class="btn btn-primary w-100">Create Account</button>
   </form>
 
-  <!-- Demo accounts hint -->
-  <div class="card mt-6" style="margin-top:24px">
-    <p class="text-sm text-muted mb-3">Demo accounts — password: <span style="color:var(--snow)">demo</span></p>
-    <div id="demo-list"></div>
+  <div class="card mt-4">
+    <div class="card-body">
+      <p class="small text-secondary mb-2">Demo accounts &mdash; password: <strong class="text-body">demo</strong></p>
+      <div id="demo-list"></div>
+    </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -67,18 +71,19 @@
 
   document.getElementById('demo-list').innerHTML =
     USERS.slice(0, 5).map(u => `
-      <div class="flex justify-between text-sm" style="padding:3px 0;cursor:pointer"
+      <div class="d-flex justify-content-between small text-secondary py-1 clickable"
            onclick="document.getElementById('login-email').value='${u.email}';document.getElementById('login-password').value='demo';switchTab('login')">
-        <span class="text-dim">${u.name}</span>
-        <span class="text-muted">${u.email}</span>
+        <span>${u.name}</span>
+        <span class="text-body-tertiary">${u.email}</span>
       </div>`).join('') +
-    `<div class="text-sm text-muted" style="padding-top:6px">…and ${USERS.length - 5} more</div>`;
+    `<div class="small text-secondary mt-1">and ${USERS.length - 5} more</div>`;
 
   function switchTab(tab) {
     document.getElementById('login-form').style.display  = tab === 'login'  ? '' : 'none';
     document.getElementById('signup-form').style.display = tab === 'signup' ? '' : 'none';
-    document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
-    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.querySelectorAll('#authTabs .nav-link').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0) === (tab === 'login'));
+    });
   }
 
   document.getElementById('login-form').addEventListener('submit', e => {
@@ -87,7 +92,7 @@
     const pass  = document.getElementById('login-password').value;
     const found = USERS.find(u => u.email === email);
     if (!found || found.password !== pass) {
-      show('login-error', '<div class="alert alert-error">Invalid email or password.</div>');
+      show('login-error', '<div class="alert alert-danger py-2 small">Invalid email or password.</div>');
       return;
     }
     setUser(getMergedUser(found.id));
@@ -101,11 +106,11 @@
     const pass  = document.getElementById('su-password').value;
     const phone = document.getElementById('su-phone').value.trim();
     if (!name || !email || !pass) {
-      show('signup-error', '<div class="alert alert-error">Please fill in all required fields.</div>');
+      show('signup-error', '<div class="alert alert-danger py-2 small">Please fill in all required fields.</div>');
       return;
     }
     if (USERS.find(u => u.email === email)) {
-      show('signup-error', '<div class="alert alert-error">Email already in use. Try logging in.</div>');
+      show('signup-error', '<div class="alert alert-danger py-2 small">Email already in use.</div>');
       return;
     }
     const newUser = {
@@ -114,7 +119,6 @@
       createdAt: new Date().toISOString().split('T')[0],
       eloHistory: [{ label: 'Start', elo: 1500 }],
     };
-    // Persist new user's edits so profile page can find them
     const edits = getUserEdits();
     edits[newUser.id] = newUser;
     localStorage.setItem('user_edits', JSON.stringify(edits));
