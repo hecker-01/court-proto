@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History · King of the Court</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Game History</h1>
+    <p class="page-sub">Your past games and performance.</p>
+  </div>
+  <div id="elo-chart"></div>
+  <div id="filter-tabs"></div>
+  <div id="games-list"></div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  initNav('history');
+  if (!requireAuth()) throw new Error('redirect');
+
+  const user = getUser();
+  let activeFilter = 'all';
+
+  // Games where this user participated, non-planned status
+  const userGames = getGames().filter(g =>
+    g.status !== 'planned' && g.participants.some(p => p.userId === user.id)
+  );
+
+  const statusOrder = { started: 0, ended: 1, processed: 2 };
+  userGames.sort((a, b) => {
+    const od = (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+    if (od !== 0) return od;
+    return new Date(b.plannedAt) - new Date(a.plannedAt);
+  });
+
+  const counts = { all: userGames.length, started: 0, ended: 0 };
+  userGames.forEach(g => {
+    if (g.status === 'started') counts.started++;
+    else counts.ended++;
+  });
+
+  // Render ELO chart from user's eloHistory
+  const u = getMergedUser(user.id) || user;
+  renderEloChart(document.getElementById('elo-chart'), u.eloHistory || user.eloHistory, 'ELO History');
+
+  function gameItem(game) {
+    const won = game.winnerUserId === user.id;
+    const date = formatDate(game.plannedAt);
+    const playerCount = game.participants.length;
+
+    return `
+      <div class="card clickable" onclick="location.href='game.html?id=${game.id}'" style="padding:16px 20px">
+        <div class="flex justify-between items-start">
+          <div class="flex-1 min-w-0">
+            <div style="font-weight:600;margin-bottom:4px">
+              ${game.name}
+              ${won ? ' <span style="color:var(--ball)">👑</span>' : ''}
+            </div>
+            <div class="text-sm text-dim">
+              ${date} · ${playerCount} players · ${game.location}
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-1 shrink-0 ml-3">
+            ${statusBadge(game.status)}
+            ${game.winnerName && game.status !== 'started' ? `<div class="text-xs text-muted">Won by ${won ? 'you' : game.winnerName}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderList() {
+    const filtered = activeFilter === 'all'
+      ? userGames
+      : activeFilter === 'ended'
+        ? userGames.filter(g => g.status === 'ended' || g.status === 'processed')
+        : userGames.filter(g => g.status === activeFilter);
+
+    const tabs = ['all', 'started', 'ended'].map(k => `
+      <button class="tab ${activeFilter === k ? 'active' : ''}" onclick="setFilter('${k}')">
+        ${k.charAt(0).toUpperCase() + k.slice(1)} (${counts[k] ?? 0})
+      </button>`).join('');
+
+    show('filter-tabs', userGames.length ? `<div class="tabs">${tabs}</div>` : '');
+
+    if (!userGames.length) {
+      show('games-list', `
+        <div class="empty">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No games played yet.</div>
+          <p class="empty-text">Join a game and start competing!</p>
+          <a href="index.html" class="btn btn-ghost mt-4">Browse Games</a>
+        </div>`);
+      return;
+    }
+
+    if (!filtered.length) {
+      show('games-list', `<p class="text-sm text-muted text-center" style="padding:32px 0">No ${activeFilter} games found.</p>`);
+      return;
+    }
+
+    show('games-list', filtered.map(gameItem).join(''));
+  }
+
+  function setFilter(f) {
+    activeFilter = f;
+    renderList();
+  }
+
+  renderList();
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King of the Court</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">King of the Court</h1>
+      <p class="page-sub" id="sub-text">Upcoming games</p>
+    </div>
+  </div>
+  <div id="live-section"></div>
+  <div id="games-list"></div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  initNav('home');
+  const user = getUser();
+  if (user) document.getElementById('sub-text').textContent = `Welcome back, ${user.name.split(' ')[0]}`;
+
+  function gameCard(game) {
+    const spots = game.maxParticipants - game.participants.length;
+    const inGame = user && isInGame(game, user.id);
+    const canJoin = user && game.status === 'planned' && spots > 0 && !inGame;
+    const avgElo = game.participants.length
+      ? Math.round(game.participants.reduce((s, p) => s + p.elo, 0) / game.participants.length)
+      : null;
+
+    return `
+      <div class="card clickable" onclick="location.href='game.html?id=${game.id}'">
+        <div class="flex justify-between items-start mb-2">
+          <h3 style="font-size:16px;font-weight:600">${game.name}</h3>
+          ${statusBadge(game.status)}
+        </div>
+        <p class="text-sm text-dim mb-3" style="line-height:1.5">${game.description}</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px;color:var(--snow-dim);border-top:1px solid var(--asphalt-light);padding-top:14px">
+          <span>📅 ${formatDate(game.plannedAt)}</span>
+          <span style="text-align:center">${game.participants.length} ${game.participants.length === 1 ? 'player' : 'players'}</span>
+          <span style="text-align:right">${avgElo !== null ? '~' + avgElo + ' ELO' : '—'}</span>
+        </div>
+        ${inGame ? `<div class="text-sm text-racket mt-3">✓ You're signed up</div>` : ''}
+        ${canJoin ? `<div class="mt-3" onclick="event.stopPropagation()"><button class="btn btn-primary btn-sm" onclick="handleJoin(${game.id})">Sign Up</button></div>` : ''}
+      </div>`;
+  }
+
+  function render() {
+    const games = getGames();
+    const live = games.filter(g => g.status === 'started');
+    const upcoming = games.filter(g => g.status === 'planned')
+      .sort((a, b) => new Date(a.plannedAt) - new Date(b.plannedAt));
+
+    if (live.length) {
+      show('live-section', `
+        <p class="text-sm font-bold mb-2" style="color:var(--status-pending)">🔴 Live now</p>
+        ${live.map(gameCard).join('')}
+        <p class="text-sm text-muted mb-3 mt-2">Upcoming</p>`);
+    } else {
+      show('live-section', '');
+    }
+
+    if (!upcoming.length && !live.length) {
+      show('games-list', `<div class="empty"><div class="empty-icon">🏆</div><div class="empty-title">No upcoming games</div><p class="empty-text">Check back soon!</p></div>`);
+    } else {
+      show('games-list', upcoming.map(gameCard).join(''));
+    }
+  }
+
+  function handleJoin(gameId) {
+    if (!user) { location.href = 'login.html'; return; }
+    joinGame(gameId, user);
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login · King of the Court</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page" style="max-width:420px;padding-top:48px">
+  <div class="text-center mb-6">
+    <div style="font-size:32px;font-weight:700;color:var(--snow)">King of the Court</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
+    <button class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+  </div>
+
+  <!-- Login -->
+  <form id="login-form">
+    <div id="login-error"></div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="login-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-primary btn-full">Log In</button>
+  </form>
+
+  <!-- Signup -->
+  <form id="signup-form" style="display:none">
+    <div id="signup-error"></div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input type="text" class="form-input" id="su-name" placeholder="Your full name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="su-email" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="su-password" placeholder="Create a password">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone <span class="text-muted">(optional)</span></label>
+      <input type="tel" class="form-input" id="su-phone" placeholder="555-0100">
+    </div>
+    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+  </form>
+
+  <!-- Demo accounts hint -->
+  <div class="card mt-6" style="margin-top:24px">
+    <p class="text-sm text-muted mb-3">Demo accounts — password: <span style="color:var(--snow)">demo</span></p>
+    <div id="demo-list"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  if (getUser()) location.href = 'index.html';
+
+  document.getElementById('demo-list').innerHTML =
+    USERS.slice(0, 5).map(u => `
+      <div class="flex justify-between text-sm" style="padding:3px 0;cursor:pointer"
+           onclick="document.getElementById('login-email').value='${u.email}';document.getElementById('login-password').value='demo';switchTab('login')">
+        <span class="text-dim">${u.name}</span>
+        <span class="text-muted">${u.email}</span>
+      </div>`).join('') +
+    `<div class="text-sm text-muted" style="padding-top:6px">…and ${USERS.length - 5} more</div>`;
+
+  function switchTab(tab) {
+    document.getElementById('login-form').style.display  = tab === 'login'  ? '' : 'none';
+    document.getElementById('signup-form').style.display = tab === 'signup' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+  }
+
+  document.getElementById('login-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const pass  = document.getElementById('login-password').value;
+    const found = USERS.find(u => u.email === email);
+    if (!found || found.password !== pass) {
+      show('login-error', '<div class="alert alert-error">Invalid email or password.</div>');
+      return;
+    }
+    setUser(getMergedUser(found.id));
+    location.href = qp('next') || 'index.html';
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const name  = document.getElementById('su-name').value.trim();
+    const email = document.getElementById('su-email').value.trim().toLowerCase();
+    const pass  = document.getElementById('su-password').value;
+    const phone = document.getElementById('su-phone').value.trim();
+    if (!name || !email || !pass) {
+      show('signup-error', '<div class="alert alert-error">Please fill in all required fields.</div>');
+      return;
+    }
+    if (USERS.find(u => u.email === email)) {
+      show('signup-error', '<div class="alert alert-error">Email already in use. Try logging in.</div>');
+      return;
+    }
+    const newUser = {
+      id: Date.now(), name, email, password: pass, phone,
+      elo: 1500, role: 'user',
+      createdAt: new Date().toISOString().split('T')[0],
+      eloHistory: [{ label: 'Start', elo: 1500 }],
+    };
+    // Persist new user's edits so profile page can find them
+    const edits = getUserEdits();
+    edits[newUser.id] = newUser;
+    localStorage.setItem('user_edits', JSON.stringify(edits));
+    setUser(newUser);
+    location.href = qp('next') || 'index.html';
+  });
+</script>
+</body>
+</html>

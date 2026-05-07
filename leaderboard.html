@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard · King of the Court</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Leaderboard</h1>
+    <p class="page-sub">Rankings update after each game.</p>
+  </div>
+
+  <div style="display:grid;gap:20px" id="layout">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  initNav('leaderboard');
+  const user = getUser();
+
+  const ranked = [...USERS].sort((a, b) => b.elo - a.elo);
+
+  const rankIcon = (i) => i === 0 ? '👑' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+
+  const leaderboardRows = ranked.map((p, i) => {
+    const isMe = user && p.id === user.id;
+    return `
+      <div class="list-row clickable" onclick="${user ? `location.href='profile.html?id=${p.id}'` : `location.href='login.html?next=leaderboard.html'`}">
+        <span class="rank-num ${i < 3 ? 'top' : ''}">${i + 1}</span>
+        <div class="avatar">${initials(p.name)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span style="font-weight:500" class="truncate">${p.name}${isMe ? ' <span class="text-muted text-xs">(you)</span>' : ''}</span>
+            <span>${rankIcon(i)}</span>
+          </div>
+        </div>
+        <span class="text-sm text-dim shrink-0" style="font-variant-numeric:tabular-nums">📈 ${p.elo} ELO</span>
+      </div>`;
+  }).join('');
+
+  const searchPanel = user
+    ? `<div class="card" style="margin-bottom:0">
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:4px">Find a player</h2>
+        <p class="text-sm text-muted mb-4">Look up any player by name.</p>
+        <div class="form-group" style="margin-bottom:12px">
+          <input type="text" class="form-input" id="search-input" placeholder="Start typing a name…" oninput="handleSearch()">
+        </div>
+        <div id="search-results"></div>
+       </div>`
+    : `<div class="card" style="margin-bottom:0">
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:4px">Find a player</h2>
+        <p class="text-sm text-muted mb-4">Look up any player by name.</p>
+        <div style="border:1px dashed var(--asphalt-light);border-radius:6px;padding:16px;background:var(--charcoal)">
+          <p class="text-sm text-dim mb-3">Sign in to search players and view profiles.</p>
+          <a href="login.html?next=leaderboard.html" class="btn btn-primary btn-sm">Login to search</a>
+        </div>
+       </div>`;
+
+  document.getElementById('layout').innerHTML = `
+    <div>
+      <div class="card" style="padding:0;overflow:hidden">
+        ${leaderboardRows}
+      </div>
+    </div>
+    <div>${searchPanel}</div>`;
+
+  function handleSearch() {
+    const q = document.getElementById('search-input').value.trim().toLowerCase();
+    const results = document.getElementById('search-results');
+    if (!q) { results.innerHTML = ''; return; }
+    const matches = USERS.filter(u => u.name.toLowerCase().includes(q));
+    if (!matches.length) {
+      results.innerHTML = `<p class="text-sm text-muted">No players found.</p>`;
+      return;
+    }
+    results.innerHTML = matches.map(p => `
+      <div class="list-row clickable" style="margin:0 -24px;padding:10px 24px" onclick="location.href='profile.html?id=${p.id}'">
+        <div class="avatar">${initials(p.name)}</div>
+        <div class="flex-1 min-w-0"><span style="font-weight:500">${p.name}</span></div>
+        <div class="text-right shrink-0">
+          <div style="font-weight:600;font-size:15px">${p.elo}</div>
+          <div class="text-xs text-muted">ELO</div>
+        </div>
+      </div>`).join('');
+  }
+</script>
+</body>
+</html>

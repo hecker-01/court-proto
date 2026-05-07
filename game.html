@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game · King of the Court</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <div style="padding-top:24px">
+    <button class="back-btn" onclick="history.back()">← Back</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  initNav('home');
+  const user = getUser();
+  const id = parseInt(qp('id'));
+
+  function render() {
+    const game = getGame(id);
+    if (!game) {
+      show('content', `<div class="empty"><div class="empty-icon">🚫</div><div class="empty-title">Game not found</div><p class="empty-text">This game may have been removed.</p><a href="index.html" class="btn btn-ghost mt-4">Back to Home</a></div>`);
+      return;
+    }
+
+    document.title = `${game.name} · King of the Court`;
+
+    const inGame  = user && isInGame(game, user.id);
+    const spots   = game.maxParticipants - game.participants.length;
+    const canJoin = user && game.status === 'planned' && spots > 0 && !inGame;
+    const canLeave = user && game.status === 'planned' && inGame;
+    const avgElo  = game.participants.length
+      ? Math.round(game.participants.reduce((s, p) => s + p.elo, 0) / game.participants.length)
+      : null;
+
+    const winnerBanner = (game.status === 'ended' || game.status === 'processed') && game.winnerName
+      ? `<div class="winner-banner">
+           <span style="font-size:20px">👑</span>
+           <div><div class="text-xs text-muted mb-1">Winner</div><div style="font-weight:600">${game.winnerName}</div></div>
+         </div>` : '';
+
+    const signupBtn = user
+      ? (canJoin
+          ? `<button class="btn btn-primary" onclick="handleJoin()">Sign Up</button>`
+          : canLeave
+            ? `<button class="btn btn-ghost" style="color:var(--danger)" onclick="handleLeave()">Leave Game</button>`
+            : inGame
+              ? `<span class="text-sm text-racket">✓ You're signed up</span>`
+              : '')
+      : game.status === 'planned'
+        ? `<a href="login.html?next=${encodeURIComponent(location.href)}" class="btn btn-primary">Sign in to join</a>`
+        : '';
+
+    const sorted = [...game.participants].sort((a, b) => b.elo - a.elo);
+    const participantRows = sorted.length
+      ? sorted.map(p => {
+          const isWinner = p.userId === game.winnerUserId;
+          const isMe = user && p.userId === user.id;
+          return `<div class="list-row clickable" onclick="location.href='profile.html?id=${p.userId}'">
+            <div class="avatar">${initials(p.name)}</div>
+            <div class="flex-1 min-w-0">
+              <div style="font-weight:500">${p.name}${isMe ? ' <span class="text-muted text-xs">(you)</span>' : ''}${isWinner ? ' 👑' : ''}</div>
+            </div>
+            <div class="text-sm text-dim" style="font-weight:600">${p.elo} ELO</div>
+          </div>`;
+        }).join('')
+      : `<div class="text-sm text-muted" style="padding:16px">No players signed up yet.</div>`;
+
+    show('content', `
+      <div class="card" style="margin-bottom:16px">
+        <div class="flex justify-between items-start mb-3">
+          <h1 style="font-size:24px;font-weight:700;line-height:1.2">${game.name}</h1>
+          ${statusBadge(game.status)}
+        </div>
+        ${game.description ? `<p class="text-dim text-sm mb-4" style="line-height:1.6">${game.description}</p>` : ''}
+
+        <div class="info-grid">
+          <div class="info-box"><div class="info-box-label">Date</div><div class="info-box-value" style="font-size:13px">${formatDate(game.plannedAt)}</div></div>
+          <div class="info-box"><div class="info-box-label">Time</div><div class="info-box-value">${formatTime(game.plannedAt)}</div></div>
+          <div class="info-box"><div class="info-box-label">Location</div><div class="info-box-value" style="font-size:13px">${game.location}</div></div>
+          <div class="info-box"><div class="info-box-label">Players</div><div class="info-box-value">${game.participants.length} / ${game.maxParticipants}</div></div>
+        </div>
+
+        ${avgElo !== null ? `<div class="text-sm text-muted mt-2">Avg ELO: <span style="color:var(--snow)">${avgElo}</span></div>` : ''}
+        ${winnerBanner ? `<div class="mt-4">${winnerBanner}</div>` : ''}
+        ${signupBtn ? `<div class="mt-4">${signupBtn}</div>` : ''}
+      </div>
+
+      <div class="card" style="padding-bottom:0">
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:4px">
+          Participants <span class="text-muted">(${game.participants.length})</span>
+        </h2>
+        <div style="margin:0 -24px">${participantRows}</div>
+      </div>
+    `);
+  }
+
+  function handleJoin() {
+    joinGame(id, user);
+    render();
+  }
+
+  function handleLeave() {
+    leaveGame(id, user.id);
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile · King of the Court</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <div style="padding-top:24px">
+    <button class="back-btn" onclick="history.back()">← Back</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav"></nav>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  initNav('leaderboard');
+  if (!requireAuth()) throw new Error('redirect');
+
+  const viewer = getUser();
+  const targetId = parseInt(qp('id'));
+
+  // Look up in base USERS or in stored new-user edits
+  let profile = getMergedUser(targetId);
+  if (!profile) {
+    const edits = getUserEdits();
+    profile = edits[targetId] || null;
+  }
+
+  if (!profile) {
+    show('content', `
+      <div class="empty">
+        <div class="empty-icon">👤</div>
+        <div class="empty-title">Player not found</div>
+        <p class="empty-text">This profile doesn't exist.</p>
+        <a href="leaderboard.html" class="btn btn-ghost mt-4">Back to Leaderboard</a>
+      </div>`);
+  } else {
+    document.title = `${profile.name} · King of the Court`;
+
+    // Games this player appeared in
+    const playerGames = getGames().filter(g =>
+      g.status !== 'planned' && g.participants.some(p => p.userId === profile.id)
+    ).sort((a, b) => new Date(b.plannedAt) - new Date(a.plannedAt));
+
+    const wins = playerGames.filter(g => g.winnerUserId === profile.id).length;
+    const played = playerGames.length;
+
+    // Ranked position
+    const rank = [...USERS].sort((a, b) => b.elo - a.elo).findIndex(u => u.id === profile.id) + 1;
+
+    const isMe = viewer && viewer.id === profile.id;
+
+    const gameRows = playerGames.length
+      ? playerGames.map(g => {
+          const won = g.winnerUserId === profile.id;
+          return `
+            <div class="list-row clickable" onclick="location.href='game.html?id=${g.id}'">
+              <div class="flex-1 min-w-0">
+                <div style="font-weight:500">${g.name} ${won ? '👑' : ''}</div>
+                <div class="text-sm text-dim">${formatDate(g.plannedAt)} · ${g.location}</div>
+              </div>
+              ${statusBadge(g.status)}
+            </div>`;
+        }).join('')
+      : `<div class="text-sm text-muted" style="padding:16px">No completed games yet.</div>`;
+
+    const chartEl = document.createElement('div');
+    renderEloChart(chartEl, profile.eloHistory, 'ELO History');
+
+    show('content', `
+      <div class="card" style="margin-bottom:16px">
+        <div class="profile-header">
+          <div class="avatar-lg">${initials(profile.name)}</div>
+          <div>
+            <div style="font-size:22px;font-weight:700">${profile.name}${isMe ? ' <span class="text-muted text-sm">(you)</span>' : ''}</div>
+            <div class="text-dim text-sm mt-1">Member since ${formatMonthYear(profile.createdAt)}</div>
+            ${rank > 0 ? `<div class="text-sm mt-1">Rank <strong class="text-ball">#${rank}</strong></div>` : ''}
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-value text-ball">${profile.elo ?? 1500}</div>
+            <div class="stat-label">ELO Rating</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value">${played}</div>
+            <div class="stat-label">Games Played</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value text-success">${wins}</div>
+            <div class="stat-label">Wins</div>
+          </div>
+        </div>
+
+        <div id="chart-target"></div>
+
+        ${isMe ? `<a href="account.html" class="btn btn-ghost btn-sm">Edit Profile</a>` : ''}
+      </div>
+
+      <div class="card" style="padding-bottom:0">
+        <h2 style="font-size:16px;font-weight:600;margin-bottom:4px">
+          Recent Games <span class="text-muted">(${played})</span>
+        </h2>
+        <div style="margin:0 -24px">${gameRows}</div>
+      </div>
+    `);
+
+    // Mount chart into the rendered DOM
+    document.getElementById('chart-target').replaceWith(chartEl);
+  }
+</script>
+</body>
+</html>
